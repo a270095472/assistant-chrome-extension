@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Assistant</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <header class="title-bar">
+      <h1>Assistant</h1>
+      <button id="settings-toggle" type="button" aria-controls="home-settings" aria-expanded="false">⚙ 首頁設定</button>
+    </header>
+    <main id="panel-content">
+      <p id="current-runtime-error" role="alert" hidden></p>
+      <section class="platform-bar" aria-label="目前平台與手動切換">
+        <div class="platform-summary">
+          <span>目前採用：</span>
+          <span id="platform-current" class="current-platform">尚未選擇</span>
+          <span id="platform-source">尚未選擇</span>
+          <span id="platform-detected">網址辨識：尚未選擇</span>
+        </div>
+        <label id="subflow-control" hidden>子流程 <select id="subflow-select" disabled></select></label>
+        <label class="sr-only" for="platform-select">手動切換平台</label>
+        <select id="platform-select" aria-label="手動切換平台" aria-describedby="platform-help" disabled>
+          <option value="" disabled>請選擇平台</option>
+        </select>
+      </section>
+      <section id="home-settings" class="card" aria-labelledby="settings-title" hidden>
+        <h2 id="settings-title">首頁顯示設定</h2>
+        <p>全平台共用；隱藏內容不刪除資料。關閉人工情境會清除本次條件確認。</p>
+        <label for="text-size">文字大小</label>
+        <select id="text-size" disabled>
+          <option value="100">100%</option>
+          <option value="125">125%</option>
+          <option value="150">150%</option>
+          <option value="175">175%</option>
+          <option value="200">200%</option>
+        </select>
+        <label><input id="toggle-attention" type="checkbox" checked disabled>高優先提醒</label>
+        <label><input id="toggle-sop" type="checkbox" checked disabled>平台 SOP</label>
+        <label><input id="toggle-checklist" type="checkbox" checked disabled>非強制檢查清單</label>
+        <label><input id="toggle-notes" type="checkbox" checked disabled>個人筆記</label>
+        <label><input id="toggle-manualContext" type="checkbox" disabled>顯示人工情境（進階條件確認）</label>
+      </section>
+      <div id="home-page" class="page">
+        <section id="manual-context" class="card" aria-label="人工情境" hidden>
+          <h2>人工情境</h2>
+          <p>品類與條件不自動推論。切換分頁、網址、平台、流程或更新 SOP 後重新確認。</p>
+          <div id="manual-options"></div>
+        </section>
+        <section id="module-attention" class="card" aria-labelledby="attention-title">
+          <h2 id="attention-title">高優先提醒</h2>
+          <div id="home-attention"><p>目前沒有高優先提醒</p></div>
+        </section>
+        <section id="module-sop" class="card" aria-labelledby="sop-title">
+          <h2 id="sop-title">平台 SOP</h2>
+          <div id="home-sop"><p>目前沒有正式平台 SOP</p></div>
+          <p class="example-label">M1 示範提示，非正式 SOP</p>
+          <div id="platform-prompts"><p>選擇平台後顯示示範提示。</p></div>
+        </section>
+        <section id="module-checklist" class="card" aria-labelledby="checklist-title">
+          <h2 id="checklist-title">非強制檢查清單</h2>
+          <div id="home-checklist"><p>目前沒有檢查事項</p></div>
+          <p class="muted">自由勾選；切換平台或品牌後重設。</p>
+        </section>
+        <section id="module-notes" class="card" aria-labelledby="notes-module-title">
+          <h2 id="notes-module-title">個人筆記</h2>
+          <div id="home-notes"><p>目前沒有個人筆記</p></div>
+        </section>
+      </div>
+      <section id="encyclopedia-page" class="page" aria-labelledby="encyclopedia-title" hidden>
+        <div class="page-intro">
+          <h2 id="encyclopedia-title">SOP 百科</h2>
+          <p>搜尋共同規則、已配置平台與來源</p>
+        </div>
+        <label class="sr-only" for="encyclopedia-search">搜尋標題、內文、分類及來源</label>
+        <input id="encyclopedia-search" type="search" placeholder="搜尋規則標題、內文、分類、來源…" autocomplete="off">
+        <div class="filters card" aria-label="規則篩選">
+          <div>
+            <label for="encyclopedia-platform">平台</label>
+            <select id="encyclopedia-platform"><option value="">全部平台（含通用）</option></select>
+          </div>
+          <div>
+            <label for="encyclopedia-category">分類</label>
+            <select id="encyclopedia-category"><option value="">全部分類</option></select>
+          </div>
+          <button id="encyclopedia-clear" type="button">清除搜尋與篩選</button>
+        </div>
+        <section class="card result-panel" aria-labelledby="results-title">
+          <h3 id="results-title">搜尋結果</h3>
+          <p id="encyclopedia-count" role="status"></p>
+          <div id="encyclopedia-results"></div>
+        </section>
+      </section>
+      <section id="notes-page" class="page" aria-labelledby="notes-page-title" hidden>
+        <div class="page-intro">
+          <h2 id="notes-page-title">我的筆記</h2>
+          <p>筆記先存本機，再寫入 Chrome 同步區；不會修改正式 SOP。</p>
+        </div>
+        <section class="card" aria-label="筆記同步與恢復">
+          <p id="notes-sync-status" role="status" aria-live="polite">正在檢查筆記同步區…</p>
+          <p>需相同 Google 同步帳號、已啟用 Chrome 同步及相同擴充套件 ID。無法在此確認帳號或同步開關，Workspace 政策也可能禁止同步。不要填寫機密或個資；這不是永久備份保證。</p>
+          <div class="notes-actions">
+            <button id="notes-sync-check" type="button">重新檢查／載入</button>
+            <button id="notes-sync-retry" type="button">重試同步</button>
+            <button id="notes-sync-preview" type="button">預覽同步恢復…</button>
+            <button id="notes-sync-download" type="button" disabled>下載恢復前備份</button>
+            <button id="notes-sync-undo" type="button" disabled>還原恢復前備份…</button>
+            <button id="notes-sync-import" type="button">從備份檔還原…</button>
+            <input id="notes-sync-file" type="file" accept=".json,application/json" hidden aria-label="選取 Assistant 筆記備份 JSON">
+          </div>
+          <p id="notes-sync-backup-note" class="muted">正在檢查恢復前備份；從檔案還原可另行選取已下載的備份。</p>
+        </section>
+        <dialog id="notes-sync-dialog" class="notes-delete-dialog" aria-labelledby="notes-sync-title">
+          <h3 id="notes-sync-title" tabindex="-1">同步恢復預覽</h3>
+          <p id="notes-sync-summary"></p>
+          <div id="notes-sync-changes"></div>
+          <button id="notes-sync-cancel" type="button">取消</button>
+          <button id="notes-sync-copies" type="button">保留本機並另存同步版本</button>
+          <button id="notes-sync-apply" type="button">確認套用同步變更（先備份）</button>
+        </dialog>
+        <section id="notes-resume-prompt" class="card" aria-label="恢復未完成草稿" hidden>
+          <p>找到一筆尚未完成的筆記草稿。</p>
+          <button id="notes-resume" type="button">繼續</button>
+          <button id="notes-abandon" type="button">放棄草稿</button>
+        </section>
+        <section id="notes-manager">
+          <div class="notes-actions">
+            <button id="notes-create" type="button" disabled>新增筆記</button>
+            <button id="notes-continue" type="button" hidden disabled>繼續編輯</button>
+          </div>
+          <label for="notes-platform">排序平台（選擇「全部平台」時不可拖曳排序）</label>
+          <select id="notes-platform" disabled><option value="">全部平台</option></select>
+          <div id="notes-list"></div>
+        </section>
+        <section id="notes-editor" class="card" aria-label="筆記編輯器" hidden>
+          <h3>編輯筆記草稿</h3>
+          <label for="notes-title-input">標題</label>
+          <input id="notes-title-input" type="text" autocomplete="off" aria-describedby="notes-title-count notes-limit-message">
+          <p id="notes-title-count"></p>
+          <label for="notes-content">內容</label>
+          <textarea id="notes-content" rows="8" aria-describedby="notes-content-count notes-limit-message"></textarea>
+          <p id="notes-content-count"></p>
+          <p id="notes-limit-message" role="status">標題最多 10、正文最多 100 個可見字元；舊筆記不截斷，修改須符合上限。</p>
+          <fieldset>
+            <legend>適用平台（可複選）</legend>
+            <div id="notes-platform-options"></div>
+          </fieldset>
+          <label for="notes-priority">優先級</label>
+          <select id="notes-priority"></select>
+          <label><input id="notes-show-home" type="checkbox" checked>在首頁顯示</label>
+          <p>編輯內容會自動暫存；正式筆記只會在按下「儲存」後更新。</p>
+          <button id="notes-save" type="button" disabled>儲存</button>
+          <button id="notes-pause" type="button" disabled>暫停編輯</button>
+        </section>
+        <p id="notes-status" role="status">正在讀取個人筆記…</p>
+      </section>
+      <section id="import-page" class="page" aria-labelledby="import-title" hidden>
+        <div class="page-intro">
+          <h2 id="import-title">目前使用的 SOP</h2>
+            <p>在 Google Sheets 編輯 SOP，下載 XLSX 後直接選檔；檢視完整差異與警告，再確認 Replace。</p>
+          <p id="current-ruleset" role="status">正在讀取 Current…</p>
+          <button id="current-reload" type="button">重新讀取 Current</button>
+            <button id="current-restore" type="button" disabled>還原上一份 SOP…</button>
+            <button id="current-reconcile" type="button" disabled>核對上次保存結果</button>
+        </div>
+        <section id="sop-update-notice" class="card sop-update-card" aria-labelledby="sop-update-title" hidden>
+          <h3 id="sop-update-title">SOP 更新提醒</h3>
+          <p id="sop-update-content" role="status" aria-live="polite"></p>
+          <section id="sop-removal-section" aria-labelledby="sop-removal-title" hidden>
+            <h4 id="sop-removal-title">規則移除明細</h4>
+            <p id="sop-removal-notice"></p>
+            <p>個人筆記仍保留。</p>
+            <button id="sop-removal-toggle" type="button" aria-expanded="false" aria-controls="sop-removal-list" hidden>展開全部</button>
+            <ul id="sop-removal-list" class="sop-removal-list" aria-label="已移除規則"></ul>
+          </section>
+          <section id="sop-platform-section" aria-labelledby="sop-platform-title" hidden>
+            <h4 id="sop-platform-title">平台異動提醒</h4>
+            <p id="sop-platform-removal-notice"></p>
+          </section>
+        </section>
+        <section id="candidate-import" class="card" aria-label="本機候選驗證">
+            <p>XLSX 最多 4 MiB；候選 JSON 最多 2 MiB。預覽不寫入。Replace 完整取代 SOP，保留筆記與偏好，並保存上一份 SOP 供單次還原。</p>
+            <p>不需付費 AI、Google 授權或公開試算表。僅接受支援範本的來源資料，不讀取 JSON_Export 或執行公式。</p>
+            <label for="candidate-file">選擇 SOP XLSX（或進階 JSON）</label>
+            <input id="candidate-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.json,application/json" disabled>
+            <details><summary>進階：JSON 匯入</summary><p>同一選檔入口可選擇完整 2.0.0／3.0.0 JSON，套用相同驗證、差異及完整 Replace 保護。</p></details>
+          <button id="candidate-cancel" type="button" disabled>取消候選預覽</button>
+          <button id="candidate-apply" type="button" disabled>套用 Replace…</button>
+          <pre id="candidate-results" role="status" aria-live="polite">尚未選擇候選更新資料；驗證通過也不會生效。</pre>
+            <details id="candidate-issue-details" hidden><summary>進階錯誤資訊（工程診斷）</summary><pre id="candidate-issue-technical"></pre></details>
+          <section id="identity-panel" class="card" aria-label="確認新增或修改資料" hidden>
+            <h3>確認資料對應</h3>
+            <p id="identity-summary" role="status"></p>
+            <pre id="identity-content"></pre>
+            <label for="identity-choice">這筆資料是新增，還是修改原有項目？</label>
+            <select id="identity-choice"></select>
+            <pre id="identity-reference" aria-label="所選原資料與關聯範圍"></pre>
+            <button id="identity-next" type="button">確認這筆，繼續預覽</button>
+            <p class="muted">只確認資料的對應關係，不會立即保存。可按取消放棄全部候選。</p>
+          </section>
+          <pre id="candidate-preview" aria-label="候選差異預覽"></pre>
+          <div id="candidate-differences" aria-label="逐條差異"></div>
+        </section>
+      </section>
+      <dialog id="replace-dialog" aria-labelledby="replace-title" aria-describedby="replace-summary">
+        <h3 id="replace-title">確認完整 Replace</h3>
+        <p id="replace-summary"></p>
+         <fieldset id="replace-risks" aria-label="逐項確認風險"></fieldset>
+        <button id="replace-confirm" type="button">確認 Replace</button>
+        <button id="replace-cancel" type="button" autofocus>取消</button>
+      </dialog>
+      <dialog id="notes-delete-dialog" class="notes-delete-dialog" role="alertdialog" aria-labelledby="notes-delete-heading" aria-describedby="notes-delete-description notes-delete-details">
+        <h3 id="notes-delete-heading">確認刪除筆記</h3>
+        <p id="notes-delete-description">確定要刪除以下筆記嗎？此操作無法復原。</p>
+        <div id="notes-delete-details">
+          <p>筆記標題：<span id="notes-delete-title"></span></p>
+          <p>受到影響的平台：<span id="notes-delete-platforms"></span></p>
+        </div>
+        <button id="notes-delete-commit" type="button">確認刪除</button>
+        <button id="notes-delete-cancel" type="button" autofocus>取消</button>
+      </dialog>
+      <p id="home-preference-status" role="status">正在讀取首頁顯示偏好…</p>
+      <p id="app-error" role="alert" hidden></p>
+      <details class="diagnostics">
+        <summary>平台詳細狀態與使用說明</summary>
+        <dl class="platform-details">
+          <dt>網址辨識結果</dt><dd id="platform-auto">尚未選擇</dd>
+          <dt>手動選擇偏好</dt><dd id="platform-manual">尚未選擇</dd>
+          <dt>上次有效平台</dt><dd id="platform-last">尚未選擇</dd>
+        </dl>
+        <p id="platform-help">手動選擇立即採用；下一次分頁或有效網址改變且可辨識時才跟隨網址。未知網站保留最後有效平台。</p>
+        <p id="app-status" role="status">正在初始化畫面…</p>
+        <p>未匯入時使用預設平台。匯入頁可驗證完整 JSON，預覽並確認後才替換 Current。</p>
+      </details>
+      <footer>僅提供人工 SOP 提示，不讀取商品內容。</footer>
+    </main>
+    <nav class="bottom-nav" aria-label="主要導覽">
+      <button id="nav-home" type="button" aria-current="page">首頁</button>
+      <button id="nav-encyclopedia" type="button">百科</button>
+      <button id="nav-import" type="button">匯入</button>
+      <button id="nav-notes" type="button">我的筆記</button>
+    </nav>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

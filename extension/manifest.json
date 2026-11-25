@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Assistant",
+  "version": "0.2.0",
+  "description": "人工 SOP 提示助手：平台辨識與手動切換。",
+  "minimum_chrome_version": "114",
+  "permissions": ["sidePanel", "tabs", "storage"],
+  "action": { "default_title": "開啟 Assistant" },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "side_panel": { "default_path": "src/panel/index.html" }
+}
